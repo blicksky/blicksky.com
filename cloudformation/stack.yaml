@@ -2,62 +2,45 @@ AWSTemplateFormatVersion: '2010-09-09'
 Description: DNS for blicksky.com
 
 Parameters:
-  domainName:
+  DomainName:
     Type: String
     Default: blicksky.com
 
+Mappings:
+  RegionMap:
+    us-east-1:
+      S3HostedZoneId: Z3AQBSTGFYJSTF
+      S3WebsiteEndpoint: s3-website-us-east-1.amazonaws.com
+
 Resources:
-  hostedZone:
+  HostedZone:
     Type: AWS::Route53::HostedZone
     Properties:
-      Name:
-        Ref: domainName
-  MXRecord:
-    Type: AWS::Route53::RecordSet
+      Name: !Ref DomainName
+
+  RecordSetGroup:
+    Type: AWS::Route53::RecordSetGroup
     Properties:
-      HostedZoneId:
-        Ref: hostedZone
-      Name:
-        Ref: domainName
-      Type: MX
-      TTL: '3600'
-      ResourceRecords:
-      - 1 aspmx.l.google.com.
-      - 5 alt1.aspmx.l.google.com.
-      - 5 alt2.aspmx.l.google.com.
-      - 10 alt3.aspmx.l.google.com.
-      - 10 alt4.aspmx.l.google.com.
+      HostedZoneId: !Ref HostedZone
+      RecordSets:
+        - Name: !Ref DomainName
+          Type: A
+          AliasTarget:
+            HostedZoneId: !FindInMap [RegionMap, !Ref 'AWS::Region', S3HostedZoneId]
+            DNSName: !FindInMap [RegionMap, !Ref 'AWS::Region', S3WebsiteEndpoint]
 
-# blickskyComARecord:
-#   Type: AWS::Route53::RecordSet
-#   Properties:
-#     HostedZoneId: Z1S05YJUM7HFYZ
-#     Name: blicksky.com.
-#     Type: A
-#     AliasTarget:
-#        HostedZoneId: Z3AQBSTGFYJSTF
-#        DNSName: s3-website-us-east-1.amazonaws.com.
+        - Name: !Join ['', ['www.', !Ref DomainName]]
+          Type: A
+          AliasTarget:
+            HostedZoneId: !FindInMap [RegionMap, !Ref 'AWS::Region', S3HostedZoneId]
+            DNSName: !FindInMap [RegionMap, !Ref 'AWS::Region', S3WebsiteEndpoint]
 
-# wwwBlickskyComARecord:
-#   Type: AWS::Route53::RecordSet
-#   Properties:
-#     HostedZoneId: Z1S05YJUM7HFYZ
-#     Name: www.blicksky.com.
-#     Type: A
-#     AliasTarget:
-#        HostedZoneId: Z3AQBSTGFYJSTF
-#        DNSName: s3-website-us-east-1.amazonaws.com.
-
-# blickskyComMxRecord:
-#   Type: AWS::Route53::RecordSet
-#   Properties:
-#     HostedZoneId: Z1S05YJUM7HFYZ
-#     Name: blicksky.com.
-#     Type: MX
-#     TTL: '3600'
-#     ResourceRecords:
-#     - 1 aspmx.l.google.com.
-#     - 5 alt1.aspmx.l.google.com.
-#     - 5 alt2.aspmx.l.google.com.
-#     - 10 alt3.aspmx.l.google.com.
-#     - 10 alt4.aspmx.l.google.com.
+        - Name: !Ref DomainName
+          Type: MX
+          TTL: '3600'
+          ResourceRecords:
+          - 1 aspmx.l.google.com.
+          - 5 alt1.aspmx.l.google.com.
+          - 5 alt2.aspmx.l.google.com.
+          - 10 alt3.aspmx.l.google.com.
+          - 10 alt4.aspmx.l.google.com.
