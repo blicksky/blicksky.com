@@ -4,13 +4,19 @@ Description: DNS for blicksky.com
 Parameters:
   DomainName:
     Type: String
-    Default: blicksky.com
+    Default: blicksky.com.
+  TTL:
+    Type: String
+    Default: '3600'
+  GSuiteSPFResourceRecord:
+    Type: String
+    Default: '"v=spf1 include:_spf.google.com ~all"'
 
 Mappings:
   RegionMap:
     us-east-1:
       S3HostedZoneId: Z3AQBSTGFYJSTF
-      S3WebsiteEndpoint: s3-website-us-east-1.amazonaws.com
+      S3WebsiteEndpoint: s3-website-us-east-1.amazonaws.com.
 
 Resources:
   HostedZone:
@@ -23,27 +29,61 @@ Resources:
     Properties:
       HostedZoneId: !Ref HostedZone
       RecordSets:
+        # root A record
         - Name: !Ref DomainName
           Type: A
           AliasTarget:
             HostedZoneId: !FindInMap [RegionMap, !Ref 'AWS::Region', S3HostedZoneId]
             DNSName: !FindInMap [RegionMap, !Ref 'AWS::Region', S3WebsiteEndpoint]
 
+        # www A record
         - Name: !Join ['', ['www.', !Ref DomainName]]
           Type: A
           AliasTarget:
             HostedZoneId: !FindInMap [RegionMap, !Ref 'AWS::Region', S3HostedZoneId]
             DNSName: !FindInMap [RegionMap, !Ref 'AWS::Region', S3WebsiteEndpoint]
 
+        # G Suite Email records
         - Name: !Ref DomainName
           Type: MX
-          TTL: '3600'
+          TTL: !Ref TTL
           ResourceRecords:
           - 1 aspmx.l.google.com.
           - 5 alt1.aspmx.l.google.com.
           - 5 alt2.aspmx.l.google.com.
           - 10 alt3.aspmx.l.google.com.
           - 10 alt4.aspmx.l.google.com.
+
+        # G Suite DKIM text record
+        - Name: !Join ['', ['google._domainkey.', !Ref DomainName]]
+          Type: TXT
+          TTL: !Ref TTL
+          ResourceRecords:
+          - '"v=DKIM1; k=rsa; p=MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAwrS8pAVNQL2zHqrmhV4JgKjsWWtN9QmbV6plyU4cTrs4bArIquSvaAHC739WNry5GYNrW8ifR4nGtupTN7uK2cR9TCosxsywNMfLb/7Uws49DfKQN7qsVl3G5BbP+EC2q7a6JsdWAJHVkT7V8mYGB5ko9fPF/vM0685ZIzQgG54+MOIPFwuDfAZ/Qg1oyCsT7" "cptQ6ugmlWreXXGexG1a7AMjQ9afOM/iaPBVI0HDDmPJ5RY1hm8j0QiAy2UMWwCiCuqGQJJwyblIwrU2b79XS46C14OIJ1oApa4iapY0S0tmMK8NweirAcwin1eqxoJ3jGue5G6tpKrduAMY6TIXQIDAQAB"'
+
+        # G Suite SPF Validation record
+        - Name: !Ref DomainName
+          Type: SPF
+          TTL: !Ref TTL
+          ResourceRecords:
+          - !Ref GSuiteSPFResourceRecord
+
+        # text records
+        - Name: !Ref DomainName
+          Type: TXT
+          TTL: !Ref TTL
+          ResourceRecords:
+          # G Suite SPF Validation
+          - !Ref GSuiteSPFResourceRecord
+          # keybase.io verification
+          - '"keybase-site-verification=b7Rs9NvZjhTiy3CRlHl_91AvjUNz5T2x1inD8FnZT9E"'
+
+        # G Suite Subdomains
+        - {Name: !Join ['', ['calendar.', !Ref DomainName]], Type: CNAME, TTL: !Ref TTL, ResourceRecords: [ghs.googlehosted.com.]}
+        - {Name: !Join ['', ['docs.',     !Ref DomainName]], Type: CNAME, TTL: !Ref TTL, ResourceRecords: [ghs.googlehosted.com.]}
+        - {Name: !Join ['', ['drive.',    !Ref DomainName]], Type: CNAME, TTL: !Ref TTL, ResourceRecords: [ghs.googlehosted.com.]}
+        - {Name: !Join ['', ['groups.',   !Ref DomainName]], Type: CNAME, TTL: !Ref TTL, ResourceRecords: [ghs.googlehosted.com.]}
+        - {Name: !Join ['', ['mail.',     !Ref DomainName]], Type: CNAME, TTL: !Ref TTL, ResourceRecords: [ghs.googlehosted.com.]}
 
 Outputs:
   NameServers:
