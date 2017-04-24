@@ -1,0 +1,20 @@
+blicksky.com.		IN	A	216.168.135.207
+blicksky.com.		IN	NS	ns-cloud-e1.googledomains.com.
+blicksky.com.		IN	NS	ns-cloud-e2.googledomains.com.
+blicksky.com.		IN	NS	ns-cloud-e3.googledomains.com.
+blicksky.com.		IN	NS	ns-cloud-e4.googledomains.com.
+blicksky.com.		IN	SOA	ns-cloud-e1.googledomains.com. cloud-dns-hostmaster.google.com. 28 21600 3600 1209600 300
+blicksky.com.		IN	MX	1 aspmx.l.google.com.
+blicksky.com.		IN	MX	5 alt1.aspmx.l.google.com.
+blicksky.com.		IN	MX	5 alt2.aspmx.l.google.com.
+blicksky.com.		IN	MX	10 alt3.aspmx.l.google.com.
+blicksky.com.		IN	MX	10 alt4.aspmx.l.google.com.
+blicksky.com.		IN	TXT	"v=spf1 include:_spf.google.com ~all"
+blicksky.com.		IN	TXT	"keybase-site-verification=b7Rs9NvZjhTiy3CRlHl_91AvjUNz5T2x1inD8FnZT9E"
+blicksky.com.		IN	SPF	"v=spf1 include:_spf.google.com ~all"
+google._domainkey.blicksky.com.	IN TXT	"v=DKIM1\; k=rsa\; p=MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAwrS8pAVNQL2zHqrmhV4JgKjsWWtN9QmbV6plyU4cTrs4bArIquSvaAHC739WNry5GYNrW8ifR4nGtupTN7uK2cR9TCosxsywNMfLb/7Uws49DfKQN7qsVl3G5BbP+EC2q7a6JsdWAJHVkT7V8mYGB5ko9fPF/vM0685ZIzQgG54+MOIPFwuDfAZ/Qg1oyCsT7" "cptQ6ugmlWreXXGexG1a7AMjQ9afOM/iaPBVI0HDDmPJ5RY1hm8j0QiAy2UMWwCiCuqGQJJwyblIwrU2b79XS46C14OIJ1oApa4iapY0S0tmMK8NweirAcwin1eqxoJ3jGue5G6tpKrduAMY6TIXQIDAQAB"
+calendar.blicksky.com.	IN	CNAME	ghs.googlehosted.com.
+docs.blicksky.com.	IN	CNAME	ghs.googlehosted.com.
+drive.blicksky.com.	IN	CNAME	ghs.googlehosted.com.
+groups.blicksky.com.	IN	CNAME	ghs.googlehosted.com.
+mail.blicksky.com.	IN	CNAME	ghs.googlehosted.com.
