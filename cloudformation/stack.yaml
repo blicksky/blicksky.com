@@ -19,13 +19,36 @@ Mappings:
       S3WebsiteEndpoint: s3-website-us-east-1.amazonaws.com.
 
 Resources:
-  # RootDomainBucket:
-  #   Type: AWS::S3::Bucket
-  #   DeletionPolicy: Retain
-  #   Properties:
-  #     BucketName: !Ref DomainName
-  #     WebsiteConfiguration:
-  #       IndexDocument: index.html
+  WWWBucket:
+    Type: AWS::S3::Bucket
+    DeletionPolicy: Retain
+    Properties:
+      BucketName: !Join ['.', ['www', !Ref DomainName]]
+      WebsiteConfiguration:
+        IndexDocument: index.html
+
+  WWWBucketPolicy:
+    Type: AWS::S3::BucketPolicy
+    DeletionPolicy: Retain
+    Properties: 
+      Bucket: !Ref WWWBucket
+      PolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Sid: AllGetObject
+            Effect: Allow
+            Principal: '*'
+            Action: s3:GetObject
+            Resource: arn:aws:s3:::www.blicksky.com/*
+
+  RootBucket:
+    Type: AWS::S3::Bucket
+    DeletionPolicy: Retain
+    Properties:
+      BucketName: !Ref DomainName
+      WebsiteConfiguration:
+        RedirectAllRequestsTo:
+          HostName: !Join ['.', ['www', !Ref DomainName]]
 
   HostedZone:
     Type: AWS::Route53::HostedZone
@@ -35,6 +58,7 @@ Resources:
 
   RecordSetGroup:
     Type: AWS::Route53::RecordSetGroup
+    DeletionPolicy: Retain
     Properties:
       HostedZoneId: !Ref HostedZone
       RecordSets:
