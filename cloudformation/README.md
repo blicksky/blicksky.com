@@ -1,16 +1,6 @@
-# Creating the stack
-```
-aws cloudformation create-stack --stack-name "blicksky-com-DNS" --template-body "file://stack.yaml"
-```
-
-# Updating the stack
-```
-aws cloudformation update-stack --stack-name "blicksky-com-DNS" --template-body "file://stack.yaml"
-```
-
 # Deploying the stack
 ```
-aws cloudformation deploy --stack-name "blicksky-com-DNS" --template-file "stack.yaml"
+aws cloudformation deploy --stack-name "blicksky-com-DNS" --template-file "stack.yaml" --no-execute-changeset
 ```
 
 # Comparing DNS
