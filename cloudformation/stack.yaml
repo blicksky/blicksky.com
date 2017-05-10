@@ -4,7 +4,7 @@ Description: DNS for blicksky.com
 Parameters:
   DomainName:
     Type: String
-    Default: blicksky.com.
+    Default: blicksky.com
   TTL:
     Type: String
     Default: '3600'
@@ -19,8 +19,17 @@ Mappings:
       S3WebsiteEndpoint: s3-website-us-east-1.amazonaws.com.
 
 Resources:
+  # RootDomainBucket:
+  #   Type: AWS::S3::Bucket
+  #   DeletionPolicy: Retain
+  #   Properties:
+  #     BucketName: !Ref DomainName
+  #     WebsiteConfiguration:
+  #       IndexDocument: index.html
+
   HostedZone:
     Type: AWS::Route53::HostedZone
+    DeletionPolicy: Retain
     Properties:
       Name: !Ref DomainName
 
@@ -37,7 +46,7 @@ Resources:
             DNSName: !FindInMap [RegionMap, !Ref 'AWS::Region', S3WebsiteEndpoint]
 
         # www A record
-        - Name: !Join ['', ['www.', !Ref DomainName]]
+        - Name: !Join ['.', ['www', !Ref DomainName]]
           Type: A
           AliasTarget:
             HostedZoneId: !FindInMap [RegionMap, !Ref 'AWS::Region', S3HostedZoneId]
@@ -55,7 +64,7 @@ Resources:
           - 10 alt4.aspmx.l.google.com.
 
         # G Suite DKIM text record
-        - Name: !Join ['', ['google._domainkey.', !Ref DomainName]]
+        - Name: !Join ['.', ['google._domainkey', !Ref DomainName]]
           Type: TXT
           TTL: !Ref TTL
           ResourceRecords:
@@ -79,11 +88,11 @@ Resources:
           - '"keybase-site-verification=b7Rs9NvZjhTiy3CRlHl_91AvjUNz5T2x1inD8FnZT9E"'
 
         # G Suite Subdomains
-        - {Name: !Join ['', ['calendar.', !Ref DomainName]], Type: CNAME, TTL: !Ref TTL, ResourceRecords: [ghs.googlehosted.com.]}
-        - {Name: !Join ['', ['docs.',     !Ref DomainName]], Type: CNAME, TTL: !Ref TTL, ResourceRecords: [ghs.googlehosted.com.]}
-        - {Name: !Join ['', ['drive.',    !Ref DomainName]], Type: CNAME, TTL: !Ref TTL, ResourceRecords: [ghs.googlehosted.com.]}
-        - {Name: !Join ['', ['groups.',   !Ref DomainName]], Type: CNAME, TTL: !Ref TTL, ResourceRecords: [ghs.googlehosted.com.]}
-        - {Name: !Join ['', ['mail.',     !Ref DomainName]], Type: CNAME, TTL: !Ref TTL, ResourceRecords: [ghs.googlehosted.com.]}
+        - {Name: !Join ['.', ['calendar', !Ref DomainName]], Type: CNAME, TTL: !Ref TTL, ResourceRecords: [ghs.googlehosted.com.]}
+        - {Name: !Join ['.', ['docs',     !Ref DomainName]], Type: CNAME, TTL: !Ref TTL, ResourceRecords: [ghs.googlehosted.com.]}
+        - {Name: !Join ['.', ['drive',    !Ref DomainName]], Type: CNAME, TTL: !Ref TTL, ResourceRecords: [ghs.googlehosted.com.]}
+        - {Name: !Join ['.', ['groups',   !Ref DomainName]], Type: CNAME, TTL: !Ref TTL, ResourceRecords: [ghs.googlehosted.com.]}
+        - {Name: !Join ['.', ['mail',     !Ref DomainName]], Type: CNAME, TTL: !Ref TTL, ResourceRecords: [ghs.googlehosted.com.]}
 
 Outputs:
   NameServers:
