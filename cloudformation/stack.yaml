@@ -11,6 +11,15 @@ Parameters:
   GSuiteSPFResourceRecord:
     Type: String
     Default: '"v=spf1 include:_spf.google.com ~all"'
+  OriginAccessIdentityId:
+    Type: String
+    Default: E1KX52CFA8G9GY
+  IndexDocument:
+    Type: String
+    Default: index.html
+  CloudFrontHostedZoneId:
+    Type: String
+    Default: Z2FDTNDATAQYW2
 
 Mappings:
   RegionMap:
@@ -25,8 +34,9 @@ Resources:
     Properties:
       BucketName: !Join ['.', ['www', !Ref DomainName]]
       WebsiteConfiguration:
-        IndexDocument: index.html
+        IndexDocument: !Ref IndexDocument
 
+  # TODO should be able to remove this
   WWWBucketPolicy:
     Type: AWS::S3::BucketPolicy
     DeletionPolicy: Retain
@@ -41,6 +51,7 @@ Resources:
             Action: s3:GetObject
             Resource: arn:aws:s3:::www.blicksky.com/*
 
+  # TODO check to see if this handles redirects from https://blicsky.com
   RootBucket:
     Type: AWS::S3::Bucket
     DeletionPolicy: Retain
@@ -49,6 +60,40 @@ Resources:
       WebsiteConfiguration:
         RedirectAllRequestsTo:
           HostName: !Join ['.', ['www', !Ref DomainName]]
+          # TODO set https as the protocol to use for the redirect URL
+
+  WildCardACMCertificate:
+    Type: AWS::CertificateManager::Certificate
+    DeletionPolicy: Retain
+    Properties:
+      DomainName: !Join ['.', ['*', !Ref DomainName]]
+
+  CDNDistribution:
+    Type: AWS::CloudFront::Distribution
+    DeletionPolicy: Retain
+    Properties:
+      DistributionConfig:
+        Origins:
+        - Id: !GetAtt WWWBucket.DomainName
+          DomainName: !GetAtt WWWBucket.DomainName
+          S3OriginConfig:
+            OriginAccessIdentity: !Join ['/', ['origin-access-identity', 'cloudfront', !Ref OriginAccessIdentityId]]
+        Enabled: true
+        DefaultRootObject: !Ref IndexDocument
+        Aliases:
+        - !Join ['.', ['www', !Ref DomainName]]
+        DefaultCacheBehavior:
+          TargetOriginId: !GetAtt WWWBucket.DomainName
+          ForwardedValues:
+              QueryString: 'false'
+              Cookies:
+                Forward: none
+          ViewerProtocolPolicy: redirect-to-https
+        ViewerCertificate:
+          AcmCertificateArn: !Ref WildCardACMCertificate
+          SslSupportMethod: 'sni-only'
+        PriceClass: PriceClass_100
+      
 
   HostedZone:
     Type: AWS::Route53::HostedZone
@@ -73,8 +118,8 @@ Resources:
         - Name: !Join ['.', ['www', !Ref DomainName]]
           Type: A
           AliasTarget:
-            HostedZoneId: !FindInMap [RegionMap, !Ref 'AWS::Region', S3HostedZoneId]
-            DNSName: !FindInMap [RegionMap, !Ref 'AWS::Region', S3WebsiteEndpoint]
+            HostedZoneId: !Ref CloudFrontHostedZoneId
+            DNSName: !GetAtt CDNDistribution.DomainName
 
         # G Suite Email records
         - Name: !Ref DomainName
@@ -86,7 +131,7 @@ Resources:
           - 5 alt2.aspmx.l.google.com.
           - 10 alt3.aspmx.l.google.com.
           - 10 alt4.aspmx.l.google.com.
-
+        
         # G Suite DKIM text record
         - Name: !Join ['.', ['google._domainkey', !Ref DomainName]]
           Type: TXT
