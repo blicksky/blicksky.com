@@ -49,7 +49,7 @@ Resources:
             Effect: Allow
             Principal: '*'
             Action: s3:GetObject
-            Resource: arn:aws:s3:::www.blicksky.com/*
+            Resource: arn:aws:s3:::www.blicksky.com/* # TODO if we don't remove it, then this should use !Ref WWWBucket
 
   # TODO check to see if this handles redirects from https://blicsky.com
   RootBucket:
@@ -60,7 +60,7 @@ Resources:
       WebsiteConfiguration:
         RedirectAllRequestsTo:
           HostName: !Join ['.', ['www', !Ref DomainName]]
-          # TODO set https as the protocol to use for the redirect URL
+          Protocol: https
 
   WildCardACMCertificate:
     Type: AWS::CertificateManager::Certificate
