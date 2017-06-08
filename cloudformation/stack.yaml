@@ -33,13 +33,12 @@ Mappings:
       S3HostedZoneId: Z3AQBSTGFYJSTF
       S3WebsiteEndpoint: s3-website-us-east-1.amazonaws.com.
 
-# TODO replace most !Joins with !Sub
 Resources:
   WWWBucket:
     Type: AWS::S3::Bucket
     DeletionPolicy: Retain
     Properties:
-      BucketName: !Join ['.', ['www', !Ref DomainName]]
+      BucketName: !Sub www.${DomainName}
       WebsiteConfiguration:
         IndexDocument: !Ref IndexDocument
 
@@ -66,14 +65,14 @@ Resources:
       BucketName: !Ref DomainName
       WebsiteConfiguration:
         RedirectAllRequestsTo:
-          HostName: !Join ['.', ['www', !Ref DomainName]]
+          HostName: !Sub www.${DomainName}
           Protocol: https
 
   WildCardACMCertificate:
     Type: AWS::CertificateManager::Certificate
     DeletionPolicy: Retain
     Properties:
-      DomainName: !Join ['.', ['*', !Ref DomainName]]
+      DomainName: !Sub '*.${DomainName}'
 
   CDNDistribution:
     Type: AWS::CloudFront::Distribution
@@ -84,11 +83,11 @@ Resources:
         - Id: !GetAtt WWWBucket.DomainName
           DomainName: !GetAtt WWWBucket.DomainName
           S3OriginConfig:
-            OriginAccessIdentity: !Join ['/', ['origin-access-identity', 'cloudfront', !Ref OriginAccessIdentityId]]
+            OriginAccessIdentity: !Sub origin-access-identity/cloudfront/${OriginAccessIdentityId}
         Enabled: true
         DefaultRootObject: !Ref IndexDocument
         Aliases:
-        - !Join ['.', ['www', !Ref DomainName]]
+        - !Sub www.${DomainName}
         DefaultCacheBehavior:
           TargetOriginId: !GetAtt WWWBucket.DomainName
           ForwardedValues:
@@ -122,7 +121,7 @@ Resources:
             DNSName: !FindInMap [RegionMap, !Ref 'AWS::Region', S3WebsiteEndpoint]
 
         # www A record
-        - Name: !Join ['.', ['www', !Ref DomainName]]
+        - Name: !Sub www.${DomainName}
           Type: A
           AliasTarget:
             HostedZoneId: !Ref CloudFrontHostedZoneId
@@ -140,7 +139,7 @@ Resources:
           - 10 alt4.aspmx.l.google.com.
 
         # G Suite DKIM text record
-        - Name: !Join ['.', ['google._domainkey', !Ref DomainName]]
+        - Name: !Sub google._domainkey.${DomainName}
           Type: TXT
           TTL: !Ref TTL
           ResourceRecords:
@@ -164,11 +163,11 @@ Resources:
           - !Sub '"keybase-site-verification=${KeybaseSiteVerification}"'
 
         # G Suite Subdomains
-        - {Name: !Join ['.', ['calendar', !Ref DomainName]], Type: CNAME, TTL: !Ref TTL, ResourceRecords: [ghs.googlehosted.com.]}
-        - {Name: !Join ['.', ['docs',     !Ref DomainName]], Type: CNAME, TTL: !Ref TTL, ResourceRecords: [ghs.googlehosted.com.]}
-        - {Name: !Join ['.', ['drive',    !Ref DomainName]], Type: CNAME, TTL: !Ref TTL, ResourceRecords: [ghs.googlehosted.com.]}
-        - {Name: !Join ['.', ['groups',   !Ref DomainName]], Type: CNAME, TTL: !Ref TTL, ResourceRecords: [ghs.googlehosted.com.]}
-        - {Name: !Join ['.', ['mail',     !Ref DomainName]], Type: CNAME, TTL: !Ref TTL, ResourceRecords: [ghs.googlehosted.com.]}
+        - { Name: !Sub 'calendar.${DomainName}', Type: CNAME, TTL: !Ref TTL, ResourceRecords: [ghs.googlehosted.com.] }
+        - { Name: !Sub     'docs.${DomainName}', Type: CNAME, TTL: !Ref TTL, ResourceRecords: [ghs.googlehosted.com.] }
+        - { Name: !Sub    'drive.${DomainName}', Type: CNAME, TTL: !Ref TTL, ResourceRecords: [ghs.googlehosted.com.] }
+        - { Name: !Sub   'groups.${DomainName}', Type: CNAME, TTL: !Ref TTL, ResourceRecords: [ghs.googlehosted.com.] }
+        - { Name: !Sub     'mail.${DomainName}', Type: CNAME, TTL: !Ref TTL, ResourceRecords: [ghs.googlehosted.com.] }
 
 Outputs:
   NameServers:
