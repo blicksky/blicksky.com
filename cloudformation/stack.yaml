@@ -20,6 +20,12 @@ Parameters:
   CloudFrontHostedZoneId:
     Type: String
     Default: Z2FDTNDATAQYW2
+  KeybaseSiteVerification:
+    Type: String
+    Default: b7Rs9NvZjhTiy3CRlHl_91AvjUNz5T2x1inD8FnZT9E
+  DKIMPublicKey:
+    Type: String
+    Default: MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAwrS8pAVNQL2zHqrmhV4JgKjsWWtN9QmbV6plyU4cTrs4bArIquSvaAHC739WNry5GYNrW8ifR4nGtupTN7uK2cR9TCosxsywNMfLb/7Uws49DfKQN7qsVl3G5BbP+EC2q7a6JsdWAJHVkT7V8mYGB5ko9fPF/vM0685ZIzQgG54+MOIPFwuDfAZ/Qg1oyCsT7" "cptQ6ugmlWreXXGexG1a7AMjQ9afOM/iaPBVI0HDDmPJ5RY1hm8j0QiAy2UMWwCiCuqGQJJwyblIwrU2b79XS46C14OIJ1oApa4iapY0S0tmMK8NweirAcwin1eqxoJ3jGue5G6tpKrduAMY6TIXQIDAQAB
 
 Mappings:
   RegionMap:
@@ -27,6 +33,7 @@ Mappings:
       S3HostedZoneId: Z3AQBSTGFYJSTF
       S3WebsiteEndpoint: s3-website-us-east-1.amazonaws.com.
 
+# TODO replace most !Joins with !Sub
 Resources:
   WWWBucket:
     Type: AWS::S3::Bucket
@@ -51,7 +58,7 @@ Resources:
             Action: s3:GetObject
             Resource: arn:aws:s3:::www.blicksky.com/* # TODO if we don't remove it, then this should use !Ref WWWBucket
 
-  # TODO check to see if this handles redirects from https://blicsky.com
+  # TODO check to see if this handles redirects from https://blicksky.com
   RootBucket:
     Type: AWS::S3::Bucket
     DeletionPolicy: Retain
@@ -131,13 +138,13 @@ Resources:
           - 5 alt2.aspmx.l.google.com.
           - 10 alt3.aspmx.l.google.com.
           - 10 alt4.aspmx.l.google.com.
-        
+
         # G Suite DKIM text record
         - Name: !Join ['.', ['google._domainkey', !Ref DomainName]]
           Type: TXT
           TTL: !Ref TTL
           ResourceRecords:
-          - '"v=DKIM1; k=rsa; p=MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAwrS8pAVNQL2zHqrmhV4JgKjsWWtN9QmbV6plyU4cTrs4bArIquSvaAHC739WNry5GYNrW8ifR4nGtupTN7uK2cR9TCosxsywNMfLb/7Uws49DfKQN7qsVl3G5BbP+EC2q7a6JsdWAJHVkT7V8mYGB5ko9fPF/vM0685ZIzQgG54+MOIPFwuDfAZ/Qg1oyCsT7" "cptQ6ugmlWreXXGexG1a7AMjQ9afOM/iaPBVI0HDDmPJ5RY1hm8j0QiAy2UMWwCiCuqGQJJwyblIwrU2b79XS46C14OIJ1oApa4iapY0S0tmMK8NweirAcwin1eqxoJ3jGue5G6tpKrduAMY6TIXQIDAQAB"'
+          - !Sub '"v=DKIM1; k=rsa; p=${DKIMPublicKey}"'
 
         # G Suite SPF Validation record
         - Name: !Ref DomainName
@@ -154,7 +161,7 @@ Resources:
           # G Suite SPF Validation
           - !Ref GSuiteSPFResourceRecord
           # keybase.io verification
-          - '"keybase-site-verification=b7Rs9NvZjhTiy3CRlHl_91AvjUNz5T2x1inD8FnZT9E"'
+          - !Sub '"keybase-site-verification=${KeybaseSiteVerification}"'
 
         # G Suite Subdomains
         - {Name: !Join ['.', ['calendar', !Ref DomainName]], Type: CNAME, TTL: !Ref TTL, ResourceRecords: [ghs.googlehosted.com.]}
