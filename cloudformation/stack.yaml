@@ -137,7 +137,7 @@ Resources:
           CustomOriginConfig:
             OriginProtocolPolicy: http-only
         Enabled: true
-        DefaultRootObject: !Ref IndexDocument # check on setting this to '' or '/' so the redirect doesn't inclue '/index.html'
+        # DefaultRootObject: !Ref IndexDocument # check on setting this to '' or '/' so the redirect doesn't inclue '/index.html'
         Aliases:
         - !Ref DomainName
         DefaultCacheBehavior:
