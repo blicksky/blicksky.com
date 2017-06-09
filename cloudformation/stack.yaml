@@ -57,9 +57,9 @@ Resources:
           - Sid: OriginAccessIdentityGetObject
             Effect: Allow
             Principal:
-              CanonicalUser: !Ref OriginAccessIdentityCanonicalUserId
+              # CanonicalUser: !Ref OriginAccessIdentityCanonicalUserId
               # TODO use this instead to avoid adding the extra paramter
-              # "AWS": "arn:aws:iam::cloudfront:user/CloudFront Origin Access Identity E1KX52CFA8G9GY"
+              AWS: !Sub arn:aws:iam::cloudfront:user/CloudFront Origin Access Identity ${OriginAccessIdentityId}
             Action: s3:GetObject
             Resource: !Sub ${WWWBucket.Arn}/*
 
@@ -84,7 +84,8 @@ Resources:
           - Sid: OriginAccessIdentityGetObject
             Effect: Allow
             Principal:
-              CanonicalUser: !Ref OriginAccessIdentityCanonicalUserId
+              # CanonicalUser: !Ref OriginAccessIdentityCanonicalUserId
+              AWS: !Sub arn:aws:iam::cloudfront:user/CloudFront Origin Access Identity ${OriginAccessIdentityId}
             Action: s3:GetObject
             Resource: !Sub ${RootBucket.Arn}/*
 
@@ -128,16 +129,19 @@ Resources:
     Properties:
       DistributionConfig:
         Origins: # TODO specify origin using the website endpoint: http://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/DownloadDistS3AndCustomOrigins.html
-        - Id: !GetAtt RootBucket.DomainName
+        - Id: !GetAtt RootBucket.WebsiteURL
           DomainName: !Select [2, !Split ['/', !GetAtt RootBucket.WebsiteURL]] # TODO is there a better way?
-          S3OriginConfig:
-            OriginAccessIdentity: !Sub origin-access-identity/cloudfront/${OriginAccessIdentityId}
+          # DomainName: !GetAtt RootBucket.WebsiteURL
+          # S3OriginConfig:
+          #   OriginAccessIdentity: !Sub origin-access-identity/cloudfront/${OriginAccessIdentityId}
+          CustomOriginConfig:
+            OriginProtocolPolicy: http-only
         Enabled: true
-        DefaultRootObject: !Ref IndexDocument
+        DefaultRootObject: !Ref IndexDocument # check on setting this to '' or '/' so the redirect doesn't inclue '/index.html'
         Aliases:
         - !Ref DomainName
         DefaultCacheBehavior:
-          TargetOriginId: !GetAtt RootBucket.DomainName
+          TargetOriginId: !GetAtt RootBucket.WebsiteURL
           ForwardedValues:
               QueryString: 'false'
               Cookies:
