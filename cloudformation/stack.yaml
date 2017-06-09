@@ -11,15 +11,13 @@ Parameters:
   GSuiteSPFResourceRecord:
     Type: String
     Default: '"v=spf1 include:_spf.google.com ~all"'
-  OriginAccessIdentityId:
-    Type: String
-    Default: E1KX52CFA8G9GY
-  IndexDocument:
-    Type: String
-    Default: index.html
   CloudFrontHostedZoneId:
     Type: String
     Default: Z2FDTNDATAQYW2
+  # TODO pull out the following 3 values into an input file that's not in source control
+  OriginAccessIdentityId:
+    Type: String
+    Default: E1KX52CFA8G9GY
   KeybaseSiteVerification:
     Type: String
     Default: b7Rs9NvZjhTiy3CRlHl_91AvjUNz5T2x1inD8FnZT9E
@@ -78,7 +76,7 @@ Resources:
           S3OriginConfig:
             OriginAccessIdentity: !Sub origin-access-identity/cloudfront/${OriginAccessIdentityId}
         Enabled: true
-        DefaultRootObject: !Ref IndexDocument
+        DefaultRootObject: index.html
         Aliases:
         - !Sub www.${DomainName}
         DefaultCacheBehavior:
