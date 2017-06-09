@@ -118,7 +118,7 @@ Resources:
       DistributionConfig:
         Origins:
         - Id: !GetAtt RootBucket.WebsiteURL
-          DomainName: !Select [2, !Split ['/', !GetAtt RootBucket.WebsiteURL]] # is there a better way?
+          DomainName: !Select [1, !Split ['http://', !GetAtt RootBucket.WebsiteURL]]
           CustomOriginConfig:
             OriginProtocolPolicy: http-only
         Enabled: true
