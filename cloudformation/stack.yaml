@@ -59,21 +59,6 @@ Resources:
           HostName: !Sub www.${DomainName}
           Protocol: https
 
-  RootBucketPolicy:
-    Type: AWS::S3::BucketPolicy
-    DeletionPolicy: Retain
-    Properties: 
-      Bucket: !Ref RootBucket
-      PolicyDocument:
-        Version: '2012-10-17'
-        Statement:
-          - Sid: OriginAccessIdentityGetObject
-            Effect: Allow
-            Principal:
-              AWS: !Sub arn:aws:iam::cloudfront:user/CloudFront Origin Access Identity ${OriginAccessIdentityId}
-            Action: s3:GetObject
-            Resource: !Sub ${RootBucket.Arn}/*
-
   WildCardACMCertificate:
     Type: AWS::CertificateManager::Certificate
     DeletionPolicy: Retain
