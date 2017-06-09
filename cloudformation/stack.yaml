@@ -14,6 +14,9 @@ Parameters:
   OriginAccessIdentityId:
     Type: String
     Default: E1KX52CFA8G9GY
+  OriginAccessIdentityCanonicalUserId:
+    Type: String
+    Default: 57b97cf9ea46d275b3cb0380dc113f18fc4bb81ac320ccb50932b01c737d8d3480b04206b18ee35aeb0aea6f961fafca
   IndexDocument:
     Type: String
     Default: index.html
@@ -27,12 +30,13 @@ Parameters:
     Type: String
     Default: MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAwrS8pAVNQL2zHqrmhV4JgKjsWWtN9QmbV6plyU4cTrs4bArIquSvaAHC739WNry5GYNrW8ifR4nGtupTN7uK2cR9TCosxsywNMfLb/7Uws49DfKQN7qsVl3G5BbP+EC2q7a6JsdWAJHVkT7V8mYGB5ko9fPF/vM0685ZIzQgG54+MOIPFwuDfAZ/Qg1oyCsT7" "cptQ6ugmlWreXXGexG1a7AMjQ9afOM/iaPBVI0HDDmPJ5RY1hm8j0QiAy2UMWwCiCuqGQJJwyblIwrU2b79XS46C14OIJ1oApa4iapY0S0tmMK8NweirAcwin1eqxoJ3jGue5G6tpKrduAMY6TIXQIDAQAB
 
-Mappings:
-  RegionMap:
-    us-east-1:
-      S3HostedZoneId: Z3AQBSTGFYJSTF
-      S3WebsiteEndpoint: s3-website-us-east-1.amazonaws.com.
+# Mappings:
+#   RegionMap:
+#     us-east-1:
+#       S3HostedZoneId: Z3AQBSTGFYJSTF
+#       S3WebsiteEndpoint: s3-website-us-east-1.amazonaws.com.
 
+# TODO don't configure as a website, since CloudFront takes care of that
 Resources:
   WWWBucket:
     Type: AWS::S3::Bucket
@@ -42,7 +46,6 @@ Resources:
       WebsiteConfiguration:
         IndexDocument: !Ref IndexDocument
 
-  # TODO should be able to remove this
   WWWBucketPolicy:
     Type: AWS::S3::BucketPolicy
     DeletionPolicy: Retain
@@ -51,13 +54,15 @@ Resources:
       PolicyDocument:
         Version: '2012-10-17'
         Statement:
-          - Sid: AllGetObject
+          - Sid: OriginAccessIdentityGetObject
             Effect: Allow
-            Principal: '*'
+            Principal:
+              CanonicalUser: !Ref OriginAccessIdentityCanonicalUserId
+              # TODO use this instead to avoid adding the extra paramter
+              # "AWS": "arn:aws:iam::cloudfront:user/CloudFront Origin Access Identity E1KX52CFA8G9GY"
             Action: s3:GetObject
-            Resource: arn:aws:s3:::www.blicksky.com/* # TODO if we don't remove it, then this should use !Ref WWWBucket
+            Resource: !Sub ${WWWBucket.Arn}/*
 
-  # TODO check to see if this handles redirects from https://blicksky.com
   RootBucket:
     Type: AWS::S3::Bucket
     DeletionPolicy: Retain
@@ -68,13 +73,30 @@ Resources:
           HostName: !Sub www.${DomainName}
           Protocol: https
 
+  RootBucketPolicy:
+    Type: AWS::S3::BucketPolicy
+    DeletionPolicy: Retain
+    Properties: 
+      Bucket: !Ref RootBucket
+      PolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Sid: OriginAccessIdentityGetObject
+            Effect: Allow
+            Principal:
+              CanonicalUser: !Ref OriginAccessIdentityCanonicalUserId
+            Action: s3:GetObject
+            Resource: !Sub ${RootBucket.Arn}/*
+
   WildCardACMCertificate:
     Type: AWS::CertificateManager::Certificate
     DeletionPolicy: Retain
     Properties:
       DomainName: !Sub '*.${DomainName}'
+      SubjectAlternativeNames:
+      - !Ref DomainName
 
-  CDNDistribution:
+  WWWCDNDistribution:
     Type: AWS::CloudFront::Distribution
     DeletionPolicy: Retain
     Properties:
@@ -99,7 +121,32 @@ Resources:
           AcmCertificateArn: !Ref WildCardACMCertificate
           SslSupportMethod: 'sni-only'
         PriceClass: PriceClass_100
-      
+  
+  RootCDNDistribution:
+    Type: AWS::CloudFront::Distribution
+    DeletionPolicy: Retain
+    Properties:
+      DistributionConfig:
+        Origins: # TODO specify origin using the website endpoint: http://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/DownloadDistS3AndCustomOrigins.html
+        - Id: !GetAtt RootBucket.DomainName
+          DomainName: !Select [2, !Split ['/', !GetAtt RootBucket.WebsiteURL]] # TODO is there a better way?
+          S3OriginConfig:
+            OriginAccessIdentity: !Sub origin-access-identity/cloudfront/${OriginAccessIdentityId}
+        Enabled: true
+        DefaultRootObject: !Ref IndexDocument
+        Aliases:
+        - !Ref DomainName
+        DefaultCacheBehavior:
+          TargetOriginId: !GetAtt RootBucket.DomainName
+          ForwardedValues:
+              QueryString: 'false'
+              Cookies:
+                Forward: none
+          ViewerProtocolPolicy: redirect-to-https
+        ViewerCertificate:
+          AcmCertificateArn: !Ref WildCardACMCertificate
+          SslSupportMethod: 'sni-only'
+        PriceClass: PriceClass_100
 
   HostedZone:
     Type: AWS::Route53::HostedZone
@@ -117,15 +164,15 @@ Resources:
         - Name: !Ref DomainName
           Type: A
           AliasTarget:
-            HostedZoneId: !FindInMap [RegionMap, !Ref 'AWS::Region', S3HostedZoneId]
-            DNSName: !FindInMap [RegionMap, !Ref 'AWS::Region', S3WebsiteEndpoint]
+            HostedZoneId: !Ref CloudFrontHostedZoneId
+            DNSName: !GetAtt RootCDNDistribution.DomainName
 
         # www A record
         - Name: !Sub www.${DomainName}
           Type: A
           AliasTarget:
             HostedZoneId: !Ref CloudFrontHostedZoneId
-            DNSName: !GetAtt CDNDistribution.DomainName
+            DNSName: !GetAtt WWWCDNDistribution.DomainName
 
         # G Suite Email records
         - Name: !Ref DomainName
