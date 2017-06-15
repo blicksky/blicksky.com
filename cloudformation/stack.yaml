@@ -8,22 +8,21 @@ Parameters:
   TTL:
     Type: String
     Default: '3600'
-  GSuiteSPFResourceRecord:
-    Type: String
-    Default: '"v=spf1 include:_spf.google.com ~all"'
   CloudFrontHostedZoneId:
     Type: String
     Default: Z2FDTNDATAQYW2
-  # TODO pull out the following 3 values into an input file that's not in source control
   OriginAccessIdentityId:
     Type: String
     Default: E1KX52CFA8G9GY
-  KeybaseSiteVerification:
+  KeybaseSiteVerificationRecord:
     Type: String
-    Default: b7Rs9NvZjhTiy3CRlHl_91AvjUNz5T2x1inD8FnZT9E
-  DKIMPublicKey:
+    Default: '"keybase-site-verification=b7Rs9NvZjhTiy3CRlHl_91AvjUNz5T2x1inD8FnZT9E"'
+  GSuiteSPFResourceRecord:
     Type: String
-    Default: MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAwrS8pAVNQL2zHqrmhV4JgKjsWWtN9QmbV6plyU4cTrs4bArIquSvaAHC739WNry5GYNrW8ifR4nGtupTN7uK2cR9TCosxsywNMfLb/7Uws49DfKQN7qsVl3G5BbP+EC2q7a6JsdWAJHVkT7V8mYGB5ko9fPF/vM0685ZIzQgG54+MOIPFwuDfAZ/Qg1oyCsT7" "cptQ6ugmlWreXXGexG1a7AMjQ9afOM/iaPBVI0HDDmPJ5RY1hm8j0QiAy2UMWwCiCuqGQJJwyblIwrU2b79XS46C14OIJ1oApa4iapY0S0tmMK8NweirAcwin1eqxoJ3jGue5G6tpKrduAMY6TIXQIDAQAB
+    Default: '"v=spf1 include:_spf.google.com ~all"'
+  DKIMRecord:
+    Type: String
+    Default: '"v=DKIM1; k=rsa; p=MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAwrS8pAVNQL2zHqrmhV4JgKjsWWtN9QmbV6plyU4cTrs4bArIquSvaAHC739WNry5GYNrW8ifR4nGtupTN7uK2cR9TCosxsywNMfLb/7Uws49DfKQN7qsVl3G5BbP+EC2q7a6JsdWAJHVkT7V8mYGB5ko9fPF/vM0685ZIzQgG54+MOIPFwuDfAZ/Qg1oyCsT7" "cptQ6ugmlWreXXGexG1a7AMjQ9afOM/iaPBVI0HDDmPJ5RY1hm8j0QiAy2UMWwCiCuqGQJJwyblIwrU2b79XS46C14OIJ1oApa4iapY0S0tmMK8NweirAcwin1eqxoJ3jGue5G6tpKrduAMY6TIXQIDAQAB"'
 
 Resources:
   WWWBucket:
@@ -158,7 +157,7 @@ Resources:
           Type: TXT
           TTL: !Ref TTL
           ResourceRecords:
-          - !Sub '"v=DKIM1; k=rsa; p=${DKIMPublicKey}"'
+          - !Ref DKIMRecord
 
         # G Suite SPF Validation record
         - Name: !Ref DomainName
@@ -175,7 +174,7 @@ Resources:
           # G Suite SPF Validation
           - !Ref GSuiteSPFResourceRecord
           # keybase.io verification
-          - !Sub '"keybase-site-verification=${KeybaseSiteVerification}"'
+          - !Ref KeybaseSiteVerificationRecord
 
         # G Suite Subdomains
         - { Name: !Sub 'calendar.${DomainName}', Type: CNAME, TTL: !Ref TTL, ResourceRecords: [ghs.googlehosted.com.] }
