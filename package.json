@@ -4,7 +4,7 @@
     "description": "Blicksky.com",
     "main": "index.js",
     "scripts": {
-        "test": "jest"
+        "test": "jest --coverage"
     },
     "husky": {
         "hooks": {
