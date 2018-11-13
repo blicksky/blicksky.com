@@ -1,0 +1,22 @@
+{
+  "name": "blicksky.com",
+  "version": "1.0.0",
+  "description": "Blicksky.com",
+  "main": "index.js",
+  "scripts": {
+    "test": "jest"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/blicksky/blicsksky.com.git"
+  },
+  "author": "Andrew Blick <andrew@blicksky.com>",
+  "license": "UNLICENSED",
+  "bugs": {
+    "url": "https://github.com/blicksky/blicsksky.com/issues"
+  },
+  "homepage": "https://github.com/blicksky/blicsksky.com#readme",
+  "devDependencies": {
+    "jest": "^23.6.0"
+  }
+}
