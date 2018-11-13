@@ -11,6 +11,36 @@ const buildHandler = (typeParts) => ({
 
 const AWS = new Proxy(Function, buildHandler(['AWS']));
 
+const Ref = (logocalName) => ({ Ref: logocalName });
+
+const Fn = {};
+
+[
+    'Base64',
+    'Cidr',
+    'FindInMap',
+    'GetAtt',
+    'GetAZs',
+    'ImportValue',
+    'Join',
+    'Select',
+    'Split',
+    'Sub',
+    'Transform'
+].forEach((functionName) => {
+    Fn[functionName] = (params) => ({
+        [`Fn::${functionName}`]: params
+    });
+});
+
+['And', 'Equals', 'If', 'Not', 'Or'].forEach((functionName) => {
+    Fn[functionName] = (params) => ({
+        [`Fn::${functionName}`]: params
+    });
+});
+
 module.exports = {
-    AWS
+    AWS,
+    Ref,
+    Fn
 };
