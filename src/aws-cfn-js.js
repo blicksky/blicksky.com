@@ -1,21 +1,16 @@
-const buildHandler = (typeParts) => ({
-    get: (object, property) =>
-        new Proxy(Function, buildHandler([...typeParts, property])),
+const getProxiedProperty = (getValue) =>
+    new Proxy({}, { get: (object, property) => getValue(property) });
 
-    apply: (target, thisArg, [properties, attributes]) => ({
-        Type: typeParts.join('::'),
-        ...attributes,
+const AWS = getProxiedProperty((awsProductName) =>
+    getProxiedProperty((dataTypeName) => (properties) => ({
+        Type: ['AWS', awsProductName, dataTypeName].join('::'),
         Properties: properties
-    })
-});
-
-const AWS = new Proxy(Function, buildHandler(['AWS']));
+    }))
+);
 
 const Ref = (logicalName) => ({ Ref: logicalName });
 
-const Fn = {};
-
-[
+const Fn = [
     'Base64',
     'Cidr',
     'FindInMap',
@@ -32,11 +27,15 @@ const Fn = {};
     'If',
     'Not',
     'Or'
-].forEach((functionName) => {
-    Fn[functionName] = (params) => ({
-        [`Fn::${functionName}`]: params
-    });
-});
+].reduce(
+    (functionsByName, name) => ({
+        ...functionsByName,
+        [name]: (parameters) => ({
+            [`Fn::${name}`]: parameters
+        })
+    }),
+    {}
+);
 
 module.exports = {
     AWS,

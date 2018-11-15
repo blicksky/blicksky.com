@@ -2,14 +2,12 @@ const { AWS, Ref, Fn } = require('../src/aws-cfn-js.js');
 
 describe('aws-cfn-js', () => {
     it('AWS builds a JSON CloudFormation template', () => {
-        const resource = AWS.Any.Thing(
-            {
+        const resource = {
+            ...AWS.Any.Thing({
                 SomeProperty: 'some property value'
-            },
-            {
-                SomeAttribute: 'some attribute value'
-            }
-        );
+            }),
+            SomeAttribute: 'some attribute value'
+        };
 
         expect(resource).toEqual({
             Type: 'AWS::Any::Thing',
