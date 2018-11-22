@@ -1,10 +1,10 @@
-const getProxiedProperty = (getValue) =>
-    new Proxy({}, { get: (object, property) => getValue(property) });
+const getPropertyProxy = (getValue) =>
+    new Proxy({}, { get: (target, property) => getValue(property) });
 
-const AWS = getProxiedProperty((awsProductName) =>
-    getProxiedProperty((dataTypeName) => (properties) => ({
+const AWS = getPropertyProxy((awsProductName) =>
+    getPropertyProxy((dataTypeName) => (resourceProperties) => ({
         Type: ['AWS', awsProductName, dataTypeName].join('::'),
-        Properties: properties
+        Properties: resourceProperties
     }))
 );
 
