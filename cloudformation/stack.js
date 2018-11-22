@@ -1,92 +1,92 @@
 const { AWS, Ref, Fn } = require('../src/aws-cfn-js.js');
 
-// TODO add DeletionPolicy: 'Retain'
+const Parameters = {
+    DomainName: {
+        Type: 'String',
+        Default: 'blicksky.com'
+    },
+    TTL: {
+        Type: 'String',
+        Default: '3600'
+    },
+    CloudFrontHostedZoneId: {
+        Type: 'String',
+        Default: Z2FDTNDATAQYW2
+    },
+    OriginAccessIdentityId: {
+        Type: 'String',
+        Default: E1KX52CFA8G9GY
+    },
+    KeybaseSiteVerificationRecord: {
+        Type: 'String',
+        Default:
+            '"keybase-site-verification=b7Rs9NvZjhTiy3CRlHl_91AvjUNz5T2x1inD8FnZT9E"'
+    },
+    GSuiteSPFResourceRecord: {
+        Type: 'String',
+        Default: '"v=spf1 include:_spf.google.com ~all"'
+    },
+    DKIMRecord: {
+        Type: 'String',
+        Default:
+            '"v=DKIM1; k=rsa; p=MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAwrS8pAVNQL2zHqrmhV4JgKjsWWtN9QmbV6plyU4cTrs4bArIquSvaAHC739WNry5GYNrW8ifR4nGtupTN7uK2cR9TCosxsywNMfLb/7Uws49DfKQN7qsVl3G5BbP+EC2q7a6JsdWAJHVkT7V8mYGB5ko9fPF/vM0685ZIzQgG54+MOIPFwuDfAZ/Qg1oyCsT7" "cptQ6ugmlWreXXGexG1a7AMjQ9afOM/iaPBVI0HDDmPJ5RY1hm8j0QiAy2UMWwCiCuqGQJJwyblIwrU2b79XS46C14OIJ1oApa4iapY0S0tmMK8NweirAcwin1eqxoJ3jGue5G6tpKrduAMY6TIXQIDAQAB"'
+    }
+};
+
+const Resources = {
+    WWWBucket: AWS.S3.Bucket({
+        BucketName: Fn.Sub('www.${DomainName}')
+    }),
+
+    WWWBucketPolicy: AWS.S3.BucketPolicy({
+        Bucket: Ref('WWWBucket'),
+        PolicyDocument: {
+            Version: '2012-10-17',
+            Statement: [
+                {
+                    Sid: 'OriginAccessIdentityGetObject',
+                    Effect: 'Allow',
+                    Principal: {
+                        AWS: Fn.Sub(
+                            'arn:aws:iam::cloudfront:user/CloudFront Origin Access Identity ${OriginAccessIdentityId}'
+                        )
+                    },
+                    Action: 's3:GetObject',
+                    Resource: Fn.Sub('${WWWBucket.Arn}/*')
+                }
+            ]
+        }
+    }),
+
+    RootBucket: AWS.S3.Bucket({
+        BucketName: Ref('DomainName'),
+        WebsiteConfiguration: {
+            RedirectAllRequestsTo: {
+                HostName: Fn.Sub('www.${DomainName}'),
+                Protocol: 'https'
+            }
+        }
+    }),
+
+    WildCardACMCertificate: AWS.CertificateManager.Certificate({
+        DomainName: Fn.Sub('*.${DomainName}'),
+        SubjectAlternativeNames: [Ref('DomainName')]
+    })
+};
+
+Object.values(Resources).forEach(
+    (resource) => (resource.DeletionPolicy = 'Retain')
+);
 
 module.exports = {
     AWSTemplateFormatVersion: '2010-09-09',
     Description: 'DNS for blicksky.com',
-
-    Parameters: {
-        DomainName: {
-            Type: 'String',
-            Default: 'blicksky.com'
-        },
-        TTL: {
-            Type: 'String',
-            Default: '3600'
-        },
-        CloudFrontHostedZoneId: {
-            Type: 'String',
-            Default: Z2FDTNDATAQYW2
-        },
-        OriginAccessIdentityId: {
-            Type: 'String',
-            Default: E1KX52CFA8G9GY
-        },
-        KeybaseSiteVerificationRecord: {
-            Type: 'String',
-            Default:
-                '"keybase-site-verification=b7Rs9NvZjhTiy3CRlHl_91AvjUNz5T2x1inD8FnZT9E"'
-        },
-        GSuiteSPFResourceRecord: {
-            Type: 'String',
-            Default: '"v=spf1 include:_spf.google.com ~all"'
-        },
-        DKIMRecord: {
-            Type: 'String',
-            Default:
-                '"v=DKIM1; k=rsa; p=MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAwrS8pAVNQL2zHqrmhV4JgKjsWWtN9QmbV6plyU4cTrs4bArIquSvaAHC739WNry5GYNrW8ifR4nGtupTN7uK2cR9TCosxsywNMfLb/7Uws49DfKQN7qsVl3G5BbP+EC2q7a6JsdWAJHVkT7V8mYGB5ko9fPF/vM0685ZIzQgG54+MOIPFwuDfAZ/Qg1oyCsT7" "cptQ6ugmlWreXXGexG1a7AMjQ9afOM/iaPBVI0HDDmPJ5RY1hm8j0QiAy2UMWwCiCuqGQJJwyblIwrU2b79XS46C14OIJ1oApa4iapY0S0tmMK8NweirAcwin1eqxoJ3jGue5G6tpKrduAMY6TIXQIDAQAB"'
-        }
-    },
-
-    Resources: {
-        WWWBucket: AWS.S3.Bucket({
-            BucketName: Fn.Sub('www.${DomainName}')
-        }),
-
-        WWWBucketPolicy: {
-            ...AWS.S3.BucketPolicy({
-                Bucket: Ref('WWWBucket'),
-                PolicyDocument: {
-                    Version: '2012-10-17',
-                    Statement: [
-                        {
-                            Sid: 'OriginAccessIdentityGetObject',
-                            Effect: 'Allow',
-                            Principal: {
-                                AWS: Fn.Sub(
-                                    'arn:aws:iam::cloudfront:user/CloudFront Origin Access Identity ${OriginAccessIdentityId}'
-                                )
-                            },
-                            Action: 's3:GetObject',
-                            Resource: Fn.Sub('${WWWBucket.Arn}/*')
-                        }
-                    ]
-                }
-            }),
-            DeletionPolicy: 'Retain'
-        }
-    }
+    Parameters,
+    Resources
 };
 
 /*
-  RootBucket:
-    Type: AWS::S3::Bucket
-    DeletionPolicy: Retain
-    Properties:
-      BucketName: !Ref DomainName
-      WebsiteConfiguration:
-        RedirectAllRequestsTo:
-          HostName: !Sub www.${DomainName}
-          Protocol: https
 
-  WildCardACMCertificate:
-    Type: AWS::CertificateManager::Certificate
-    DeletionPolicy: Retain
-    Properties:
-      DomainName: !Sub '*.${DomainName}'
-      SubjectAlternativeNames:
-      - !Ref DomainName
 
   WWWCDNDistribution:
     Type: AWS::CloudFront::Distribution
