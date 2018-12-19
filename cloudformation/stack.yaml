@@ -180,7 +180,6 @@ Resources:
         - { Name: !Sub 'calendar.${DomainName}', Type: CNAME, TTL: !Ref TTL, ResourceRecords: [ghs.googlehosted.com.] }
         - { Name: !Sub     'docs.${DomainName}', Type: CNAME, TTL: !Ref TTL, ResourceRecords: [ghs.googlehosted.com.] }
         - { Name: !Sub    'drive.${DomainName}', Type: CNAME, TTL: !Ref TTL, ResourceRecords: [ghs.googlehosted.com.] }
-        - { Name: !Sub   'groups.${DomainName}', Type: CNAME, TTL: !Ref TTL, ResourceRecords: [ghs.googlehosted.com.] }
         - { Name: !Sub     'mail.${DomainName}', Type: CNAME, TTL: !Ref TTL, ResourceRecords: [ghs.googlehosted.com.] }
 
 Outputs:
