@@ -1,0 +1,21 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - master
+  pull_request:
+    branches:
+      - master
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+    - name: AWS CloudFormation "Deploy CloudFormation Stack" Action for GitHub Actions
+      uses: aws-actions/aws-cloudformation-github-deploy@v1
+      with:
+        name: blicksky-com-DNS
+        template: cloudformation/stack.yaml
+        no-fail-on-empty-changeset: 1
