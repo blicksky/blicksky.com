@@ -62,7 +62,11 @@ Resources:
     Properties:
       DomainName: !Sub '*.${DomainName}'
       SubjectAlternativeNames:
-      - !Ref DomainName
+        - !Ref DomainName
+      ValidationMethod: DNS
+      DomainValidationOptions:
+        - DomainName: !Sub '*.${DomainName}'
+          HostedZoneId: !Ref HostedZone
 
   WWWCDNDistribution:
     Type: AWS::CloudFront::Distribution
@@ -70,14 +74,14 @@ Resources:
     Properties:
       DistributionConfig:
         Origins:
-        - Id: !GetAtt WWWBucket.DomainName
-          DomainName: !GetAtt WWWBucket.DomainName
-          S3OriginConfig:
-            OriginAccessIdentity: !Sub origin-access-identity/cloudfront/${OriginAccessIdentityId}
+          - Id: !GetAtt WWWBucket.DomainName
+            DomainName: !GetAtt WWWBucket.DomainName
+            S3OriginConfig:
+              OriginAccessIdentity: !Sub origin-access-identity/cloudfront/${OriginAccessIdentityId}
         Enabled: true
         DefaultRootObject: index.html
         Aliases:
-        - !Sub www.${DomainName}
+          - !Sub www.${DomainName}
         DefaultCacheBehavior:
           TargetOriginId: !GetAtt WWWBucket.DomainName
           ForwardedValues:
@@ -96,13 +100,13 @@ Resources:
     Properties:
       DistributionConfig:
         Origins:
-        - Id: !GetAtt RootBucket.WebsiteURL
-          DomainName: !Select [1, !Split ['http://', !GetAtt RootBucket.WebsiteURL]]
-          CustomOriginConfig:
-            OriginProtocolPolicy: http-only
+          - Id: !GetAtt RootBucket.WebsiteURL
+            DomainName: !Select [1, !Split ['http://', !GetAtt RootBucket.WebsiteURL]]
+            CustomOriginConfig:
+              OriginProtocolPolicy: http-only
         Enabled: true
         Aliases:
-        - !Ref DomainName
+          - !Ref DomainName
         DefaultCacheBehavior:
           TargetOriginId: !GetAtt RootBucket.WebsiteURL
           ForwardedValues:
@@ -146,35 +150,35 @@ Resources:
           Type: MX
           TTL: !Ref TTL
           ResourceRecords:
-          - 1 aspmx.l.google.com.
-          - 5 alt1.aspmx.l.google.com.
-          - 5 alt2.aspmx.l.google.com.
-          - 10 alt3.aspmx.l.google.com.
-          - 10 alt4.aspmx.l.google.com.
+            - 1 aspmx.l.google.com.
+            - 5 alt1.aspmx.l.google.com.
+            - 5 alt2.aspmx.l.google.com.
+            - 10 alt3.aspmx.l.google.com.
+            - 10 alt4.aspmx.l.google.com.
 
         # G Suite DKIM text record
         - Name: !Sub google._domainkey.${DomainName}
           Type: TXT
           TTL: !Ref TTL
           ResourceRecords:
-          - !Ref DKIMRecord
+            - !Ref DKIMRecord
 
         # G Suite SPF Validation record
         - Name: !Ref DomainName
           Type: SPF
           TTL: !Ref TTL
           ResourceRecords:
-          - !Ref GSuiteSPFResourceRecord
+            - !Ref GSuiteSPFResourceRecord
 
         # text records
         - Name: !Ref DomainName
           Type: TXT
           TTL: !Ref TTL
           ResourceRecords:
-          # G Suite SPF Validation
-          - !Ref GSuiteSPFResourceRecord
-          # keybase.io verification
-          - !Ref KeybaseSiteVerificationRecord
+            # G Suite SPF Validation
+            - !Ref GSuiteSPFResourceRecord
+            # keybase.io verification
+            - !Ref KeybaseSiteVerificationRecord
 
         # G Suite Subdomains
         - { Name: !Sub 'calendar.${DomainName}', Type: CNAME, TTL: !Ref TTL, ResourceRecords: [ghs.googlehosted.com.] }
