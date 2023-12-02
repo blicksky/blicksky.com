@@ -23,6 +23,9 @@ Parameters:
   DKIMRecord:
     Type: String
     Default: '"v=DKIM1; k=rsa; p=MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAwrS8pAVNQL2zHqrmhV4JgKjsWWtN9QmbV6plyU4cTrs4bArIquSvaAHC739WNry5GYNrW8ifR4nGtupTN7uK2cR9TCosxsywNMfLb/7Uws49DfKQN7qsVl3G5BbP+EC2q7a6JsdWAJHVkT7V8mYGB5ko9fPF/vM0685ZIzQgG54+MOIPFwuDfAZ/Qg1oyCsT7" "cptQ6ugmlWreXXGexG1a7AMjQ9afOM/iaPBVI0HDDmPJ5RY1hm8j0QiAy2UMWwCiCuqGQJJwyblIwrU2b79XS46C14OIJ1oApa4iapY0S0tmMK8NweirAcwin1eqxoJ3jGue5G6tpKrduAMY6TIXQIDAQAB"'
+  BlueskyHandleVerificationRecord:
+    Type: String
+    Default: '"did=did:plc:pgjguy5r2dzmsw2yd63bro7y"'
 
 Resources:
   WWWBucket:
@@ -185,7 +188,7 @@ Resources:
           Type: TXT
           TTL: !Ref TTL
           ResourceRecords:
-            - did=did:plc:pgjguy5r2dzmsw2yd63bro7y
+            - !Ref BlueskyHandleVerificationRecord
 
         # G Suite Subdomains
         - { Name: !Sub 'calendar.${DomainName}', Type: CNAME, TTL: !Ref TTL, ResourceRecords: [ghs.googlehosted.com.] }
