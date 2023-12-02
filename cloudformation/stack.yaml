@@ -180,6 +180,13 @@ Resources:
             # keybase.io verification
             - !Ref KeybaseSiteVerificationRecord
 
+        # Bluesky handle verification
+        - Name: !Sub _atproto.${DomainName}
+          Type: TXT
+          TTL: !Ref TTL
+          ResourceRecords:
+            - did=did:plc:pgjguy5r2dzmsw2yd63bro7y
+
         # G Suite Subdomains
         - { Name: !Sub 'calendar.${DomainName}', Type: CNAME, TTL: !Ref TTL, ResourceRecords: [ghs.googlehosted.com.] }
         - { Name: !Sub     'docs.${DomainName}', Type: CNAME, TTL: !Ref TTL, ResourceRecords: [ghs.googlehosted.com.] }
