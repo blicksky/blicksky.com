@@ -196,6 +196,9 @@ Resources:
         - { Name: !Sub    'drive.${DomainName}', Type: CNAME, TTL: !Ref TTL, ResourceRecords: [ghs.googlehosted.com.] }
         - { Name: !Sub     'mail.${DomainName}', Type: CNAME, TTL: !Ref TTL, ResourceRecords: [ghs.googlehosted.com.] }
 
+        # Squarespace Domain Forwarding
+        - { Name: !Sub   'resume.${DomainName}', Type: CNAME, TTL: !Ref TTL, ResourceRecords: [ext-sq.squarespace.com] }
+
 Outputs:
   NameServers:
     Value: !Join [', ', !GetAtt HostedZone.NameServers]
